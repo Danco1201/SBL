@@ -48,15 +48,17 @@ def procesar(lines):
         parts = line.split()
         opcode = parts[0]
         if opcode.endswith(":"):
-            labels[opcode[::-1]] = tokcounter
+            labels[opcode[:-1]] = tokcounter
         tokcounter += 1
     return labels
 
-def execute(pgm, labels) -> None:
+def execute(pgm, labels):
     t = 0
     stack = Stack(256)
     variables = {}
+    loopstack = []
     global functions, threads
+
     for line in pgm:
         if line.startswith("INCLUDE"):
             module_name = line.split()[1]
@@ -65,53 +67,76 @@ def execute(pgm, labels) -> None:
     while pgm[t] != "STOP":
         opcode = pgm[t]
         t += 1
-        parts = pgm[t].split()
+        parts = pgm[t].split() if t < len(pgm) else []
 
         if opcode == "PUSH":
-            if len(parts) > 1:
-                n = int(parts[1])
-                stack.push(n)
+            if len(parts) > 0:
+                arg = parts[0]
+                try:
+                    n = int(arg)
+                    stack.push(n)
+                except ValueError:
+                    if arg in variables:
+                        stack.push(variables[arg])
+                    else:
+                        print(f"pushing variable error in line {t}.")
+                        sys.exit(1)
             else:
-                print(f"pushing error in line {t}")
-                sys.exit(1)
-        elif opcode == "LAMBDA":
-            func_code = parts[1:]
-            id = f"lambda_{t}"
-            functions[id] = func_code
-        elif opcode == "FLAMBDA":
-            id = parts[1]
-            if id in functions:
-                lambda_code = functions[id]
-                execute(lambda_code, labels)
-            else:
-                print(f"lambda {id} not defined.")
+                print(f"pushing integer error in line {t}.")
                 sys.exit(1)
 
+
         elif opcode == "PRINT":
-            if len(parts) > 1:
-                strlit = ' '.join(parts[1:])
+            if parts:
+                strlit = ' '.join(parts)
                 print(strlit)
             else:
                 print(f"print error in line {t}.")
                 sys.exit(1)
 
         elif opcode == "SET":
-            if len(parts) > 2:
-                name = parts[1]
-                val = int(parts[2])
+            if len(parts) > 1:
+                name = parts[0]
+                val = int(parts[1])
                 variables[name] = val
             else:
                 print(f"variableset error in line {t}")
                 sys.exit(1)
 
         elif opcode == "GET":
-            if len(parts) > 1:
-                name = parts[1]
+            if parts:
+                name = parts[0]
                 stack.push(variables.get(name, 0))
             else:
                 print(f"getting variable error in line {t}")
+
+        elif opcode in ["ADD", "SUB", "MUL", "DIV"]:
+            b = stack.pop()
+            a = stack.pop()
+            if opcode == "ADD":
+                stack.push(a + b)
+            elif opcode == "SUB":
+                stack.push(a - b)
+            elif opcode == "MUL":
+                stack.push(a * b)
+            elif opcode == "DIV":
+                if b == 0:
+                    print("division by zero error")
+                    sys.exit(1)
+                stack.push(a // b)
+
+        elif opcode == "WHILE":
+            condition = parts[0]
+            loopstack.append((t - 1, condition))
+
+        elif opcode == "ENDWHILE":
+            start, condition = loopstack.pop()
+            val = variables.get(condition, 0)
+            if val != 0:
+                t = start
+
         elif opcode == "THREAD":
-            thread_code = parts[1:]
+            thread_code = parts
             thread = threading.Thread(target=execute, args=(thread_code, labels))
             threads.append(thread)
             thread.start()
@@ -121,7 +146,7 @@ def execute(pgm, labels) -> None:
                 thread.join()
 
         else:
-            print(f"operacion no disponible {opcode} en la linea {t}.")
+            print(f"operation not available {opcode} at line {t}.")
             sys.exit(1)
 
         t += 1
@@ -137,7 +162,7 @@ class Stack:
 
     def pop(self):
         if self.full == -1:
-            print("index dont exist")
+            print("index doesn't exist")
             sys.exit(1)
         n = self.array[self.full]
         self.full -= 1
@@ -145,12 +170,12 @@ class Stack:
 
     def top(self):
         if self.full == -1:
-            print("pile dont exist.")
+            print("stack doesn't exist.")
             sys.exit(1)
         return self.array[self.full]
 
 def debug(stack):
-    print("Depuracion:", stack.array[:stack.full+1])
+    print("Depuracion:", stack.array[:stack.full + 1])
 
 if __name__ == "__main__":
     path = check()
@@ -177,3 +202,4 @@ if __name__ == "__main__":
             tokcounter += 1
     pgm.append("STOP")
     execute(pgm, labels)
+
