@@ -28,17 +28,17 @@ SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basad
    cd sbl
 2. Escribe un archivo SBL. Ejemplo: `file.sbl`:
    ```sbl
-SET x 5
-LAMBDA func x + 5
-PUSH 10
-PRINT "El resultado es:"
-GET x
-CALL func
-ADD
-PRINT "Fin del programa."
+   SET x 5
+   LAMBDA func x + 5
+   PUSH 10
+   PRINT "El resultado es:"
+   GET x
+   CALL func
+   ADD
+   PRINT "Fin del programa."
 3. Ejecuta el interprete:
 ``` bash
-python interpreter.py file.sbl
+   python interpreter.py file.sbl
 
 ## Estructura del proyecto:
 1. `interprete.py`: El unico archivo. Maneja todo el interprete. Modificar con precaucion
