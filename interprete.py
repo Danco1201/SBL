@@ -1,35 +1,30 @@
-from sys import argv
 import sys
+import threading
+from sys import argv
 
 modules = {}
+threads = []
+functions = {}
 
-def include(module_name):
-    if module_name in modules:
-        return modules[module_name]
+def include(name):
+    if name in modules:
+        return modules[name]
     try:
-        with open(module_name + ".sbl", "r") as f:
+        with open(name + ".sbl", "r") as f:
             module_lines = f.readlines()
         module = procesar(module_lines)
-        modules[module_name] = module
+        modules[name] = module
         return module
     except FileNotFoundError:
-        print(f"Module {module_name} not found!")
+        print(f"module {name} not found")
         sys.exit(1)
 
 class SBLException(Exception):
     pass
+
 class UnderflowError(SBLException):
-    def __init__(self, value):
-        self.value: str = value
-    def __str__(self):
-        return str(self.value)
+    pass
 
-    def __init__(self, value, dtype):
-        self.value = value
-        self.dtype = dtype
-
-    def __repr__(self):
-        return f"{self.value}({self.dtype})"
 def check():
     if len(argv) != 2:
         print("the argument must be a file")
@@ -42,12 +37,9 @@ def read(path):
         with open(path, "r") as f:
             lines = [line.strip() for line in f.readlines() if line.strip() and not line.strip().startswith("--")]
     except FileNotFoundError:
-        print(f"file {path} doesnt exist")
+        print(f"file {path} doesn't exist")
         sys.exit(1)
     return lines
-
-def printstack(stack) -> None:
-    print(stack.array[:stack.full+1])
 
 def procesar(lines):
     labels = {}
@@ -64,7 +56,7 @@ def execute(pgm, labels) -> None:
     t = 0
     stack = Stack(256)
     variables = {}
-
+    global functions, threads
     for line in pgm:
         if line.startswith("INCLUDE"):
             module_name = line.split()[1]
@@ -82,45 +74,19 @@ def execute(pgm, labels) -> None:
             else:
                 print(f"pushing error in line {t}")
                 sys.exit(1)
-        elif opcode == "POP":
-            try:
-                stack.pop()
-            except UnderflowError:
-                print("pile is overflow.")
+        elif opcode == "LAMBDA":
+            func_code = parts[1:]
+            id = f"lambda_{t}"
+            functions[id] = func_code
+        elif opcode == "FLAMBDA":
+            id = parts[1]
+            if id in functions:
+                lambda_code = functions[id]
+                execute(lambda_code, labels)
+            else:
+                print(f"lambda {id} not defined.")
                 sys.exit(1)
-        elif opcode == "ADD":
-            a = stack.pop()
-            b = stack.pop()
-            stack.push(a + b)
-        elif opcode == "SUB":
-            a = stack.pop()
-            b = stack.pop()
-            stack.push(b - a)
-        elif opcode == "MUL":
-            a = stack.pop()
-            b = stack.pop()
-            stack.push(a * b)
-        elif opcode == "DIV":
-            a = stack.pop()
-            b = stack.pop()
-            if a == 0:
-                print(f"infinity")
-            stack.push(b / a)
-        elif opcode == "MOD":
-            a = stack.pop()
-            b = stack.pop()
-            stack.push(b % a)
-        elif opcode == "NEG":
-            a = stack.pop()
-            stack.push(-a)
-        elif opcode == "DUP":
-            a = stack.top()
-            stack.push(a)
-        elif opcode == "SWAP":
-            a = stack.pop()
-            b = stack.pop()
-            stack.push(a)
-            stack.push(b)
+
         elif opcode == "PRINT":
             if len(parts) > 1:
                 strlit = ' '.join(parts[1:])
@@ -128,9 +94,6 @@ def execute(pgm, labels) -> None:
             else:
                 print(f"print error in line {t}.")
                 sys.exit(1)
-        elif opcode == "READ":
-            n = int(input())
-            stack.push(n)
 
         elif opcode == "SET":
             if len(parts) > 2:
@@ -147,40 +110,20 @@ def execute(pgm, labels) -> None:
                 stack.push(variables.get(name, 0))
             else:
                 print(f"getting variable error in line {t}")
-        elif opcode == "IF":
-            condition = stack.pop()
-            if condition == 0:
-                while pgm[t] != "ENDIF":
-                    t += 1
-        elif opcode == "ELSE":
-            while pgm[t] != "ENDIF":
-                t += 1
-        elif opcode == "ENDIF":
-            pass
-        elif opcode == "CALL":
-            if len(parts) > 1:
-                label = parts[1]
-                stack.push(t)
-                t = labels.get(label[::-1], t)
-            else:
-                print(f"calling function error in line {t}.")
-        elif opcode == "RETURN":
-            t = stack.pop()
-        elif opcode == "JEQ0":
-            n = stack.top()
-            if n == 0:
-                t = labels[pgm[t][::-1]]
-        elif opcode == "JGT0":
-            number = stack.top()
-            if number > 0:
-                t = labels[pgm[t][::-1]]
-        elif opcode == "BREAKPOINT":
-            print([stack, variables])
-            debug(stack)
+        elif opcode == "THREAD":
+            thread_code = parts[1:]
+            thread = threading.Thread(target=execute, args=(thread_code, labels))
+            threads.append(thread)
+            thread.start()
+
+        elif opcode == "JOIN":
+            for thread in threads:
+                thread.join()
 
         else:
             print(f"operacion no disponible {opcode} en la linea {t}.")
             sys.exit(1)
+
         t += 1
 
 class Stack:
