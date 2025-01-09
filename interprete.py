@@ -6,7 +6,8 @@ modules = {}
 threads = []
 functions = {}
 arrays={}
-
+classes={}
+instances={}
 def include(name):
     if name in modules:
         return modules[name]
@@ -58,7 +59,7 @@ def execute(pgm, labels):
     stack = Stack(256)
     variables = {}
     loopstack = []
-    global functions, threads
+    global functions, threads, instances, classes
 
     for line in pgm:
         if line.startswith("INCLUDE"):
@@ -111,6 +112,40 @@ def execute(pgm, labels):
             else:
                 print(f"getting variable error in line {t}")
 
+        if opcode == "CLASS":
+            class_name = parts[1]
+            classes[class_name] = {"methods": {}, "attributes": []}
+        
+        elif opcode == "CREATE":
+            class_name = parts[1]
+            instance_name = parts[2]
+            if class_name in classes:
+                instance = {"class": class_name, "attributes": {}}
+                instances[instance_name] = instance
+                stack.push(instance_name)
+            else:
+                print(f"Class {class_name} not defined.")
+                sys.exit(1)
+
+        elif opcode == "SETATTR":
+            instance_name = parts[1]
+            attr_name = parts[2]
+            value = int(parts[3])
+            if instance_name in instances:
+                instance = instances[instance_name]
+                instance["attributes"][attr_name] = value
+            else:
+                print(f"Instance {instance_name} not found.")
+                sys.exit(1)
+
+        elif opcode == "GETATTR":
+            instance_name = parts[1]
+            attr_name = parts[2]
+            if instance_name in instances and attr_name in instances[instance_name]["attributes"]:
+                stack.push(instances[instance_name]["attributes"][attr_name])
+            else:
+                print(f"Error retrieving attribute {attr_name} from {instance_name}.")
+                sys.exit(1)
         elif opcode in ["ADD", "SUB", "MUL", "DIV"]:
             b = stack.pop()
             a = stack.pop()
@@ -241,4 +276,3 @@ if __name__ == "__main__":
             tokcounter += 1
     pgm.append("STOP")
     execute(pgm, labels)
-
