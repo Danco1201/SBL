@@ -5,6 +5,7 @@ from sys import argv
 modules = {}
 threads = []
 functions = {}
+arrays={}
 
 def include(name):
     if name in modules:
@@ -144,6 +145,44 @@ def execute(pgm, labels):
         elif opcode == "JOIN":
             for thread in threads:
                 thread.join()
+        if opcode == "ARRCREATE":
+            name = parts[1]
+            size = int(parts[2])
+            arrays[name] = [None] * size  
+
+        elif opcode == "ARRSET":
+            name = parts[1]
+            index = int(parts[2])
+            value = int(parts[3])
+            if name in arrays and 0 <= index < len(arrays[name]):
+                arrays[name][index] = value
+            else:
+                print(f"array  {name} index {index} setting error in line {t}")
+                sys.exit(1)
+
+        elif opcode == "ARRGET":
+            name = parts[1]
+            index = int(parts[2])
+            if name in arrays and 0 <= index < len(arrays[name]):
+                stack.push(arrays[name][index])
+            else:
+                print(f"Error al obtener de {name} en índice {index}.")
+                sys.exit(1)
+        elif opcode == "EQ":
+            var1 = stack.pop()
+            var2 = stack.pop()
+            stack.push(1 if var1 == var2 else 0)  
+
+        elif opcode == "LT":
+            var1 = stack.pop()
+            var2 = stack.pop()
+            stack.push(1 if var1 < var2 else 0) 
+
+        elif opcode == "GT":
+            var1 = stack.pop()
+            var2 = stack.pop()
+            stack.push(1 if var1 > var2 else 0) 
+
 
         else:
             print(f"operation not available {opcode} at line {t}.")
