@@ -13,6 +13,8 @@ SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basad
 - **Modularidad:** Incluir y usar módulos externos con `INCLUDE`.
 - **Funciones lambda:** Manejo de funciones anonimas con `LAMBDA` y llamada de funciones anonimas con `FLAMBDA`
 - **Funciones como etiquetas:** Llamada de funciones con `CALL` y las funciones son tratadas como etiquetas
+- **Arreglos:** Manejo de arrays con `ARRCREATE, `ARRSET y `ARRGET
+- **P.O.O. en bajo nivel:** Programacion orientada objetos con instrucciones similares a las de la maquina, como `CREATE, `CLASS, `SETATTR y `GETATTR
 
 ---
 
@@ -41,7 +43,7 @@ SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basad
    python interpreter.py file.sbl
 
 ## Estructura del proyecto:
-1. `interprete.py`: El unico archivo. Maneja todo el interprete. Modificar con precaucion
+- `interprete.py`: El unico archivo. Maneja todo el interprete. Modificar con precaucion
 
 ## ADVERTENCIAS
 El lenguaje no esta listo, asi que es probable que tenga muchos errores. Si encuentran uno, hagan una pull request o avisenme
