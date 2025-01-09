@@ -37,7 +37,7 @@ SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basad
    ADD
    PRINT "Fin del programa."
 3. Ejecuta el interprete:
-``` bash
+   ```bash
    python interpreter.py file.sbl
 
 ## Estructura del proyecto:
