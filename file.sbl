@@ -1,0 +1,23 @@
+--comentario
+SET x 10
+SET y 20
+
+-- Condicional
+GET x
+IF
+    PRINT "x es no cero"
+ELSE
+    PRINT "x es cero"
+ENDIF
+
+-- funcion
+CALL mi_funcion
+
+-- definicion de funcion
+mi_funcion:
+    GET x
+    GET y
+    ADD
+    PRINT "Suma de x y y"
+    RETURN
+STOP
