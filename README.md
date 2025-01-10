@@ -15,6 +15,9 @@ SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basad
 - **Funciones como etiquetas:** Llamada de funciones con `CALL` y las funciones son tratadas como etiquetas
 - **Arreglos:** Manejo de arrays con `ARRCREATE`, `ARRSET` y `ARRGET`
 - **P.O.O. en bajo nivel:** Programacion orientada objetos con instrucciones similares a las de la maquina, como `CREATE`, `CLASS`, `SETATTR` y `GETATTR`
+- **Manejo de memoria:** Manejo de memoria con `MALLOC` y `FREE`
+- **Strings:** Manejo de cadenas com `CONCAT` para concatenar y `SUBSTRING` para subcadenas
+- **Operaciones con pilas avanzadas:** `CLEAR`, `SIZE`, `EMPTY`, etc.
 
 ---
 
