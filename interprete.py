@@ -5,14 +5,18 @@ from sys import argv
 modules = {}
 threads = []
 functions = {}
-arrays={}
-classes={}
-instances={}
+arrays = {}
+classes = {}
+instances = {}
+
+
 def concatenate(*args):
     return ''.join(args)
 
+
 def substring(string, start, end):
     return string[start:end]
+
 
 def include(name):
     if name in modules:
@@ -27,17 +31,21 @@ def include(name):
         print(f"module {name} not found")
         sys.exit(1)
 
+
 class SBLException(Exception):
     pass
 
+
 class UnderflowError(SBLException):
     pass
+
 
 def check():
     if len(argv) != 2:
         print("the argument must be a file")
         sys.exit(1)
     return argv[1]
+
 
 def read(path):
     lines = []
@@ -49,6 +57,7 @@ def read(path):
         sys.exit(1)
     return lines
 
+
 def procesar(lines):
     labels = {}
     tokcounter = 0
@@ -59,6 +68,7 @@ def procesar(lines):
             labels[opcode[:-1]] = tokcounter
         tokcounter += 1
     return labels
+
 
 def execute(pgm, labels):
     t = 0
@@ -121,7 +131,7 @@ def execute(pgm, labels):
         if opcode == "CLASS":
             class_name = parts[1]
             classes[class_name] = {"methods": {}, "attributes": []}
-        
+
         elif opcode == "CREATE":
             class_name = parts[1]
             instance_name = parts[2]
@@ -166,6 +176,19 @@ def execute(pgm, labels):
                     print("division by zero error")
                     sys.exit(1)
                 stack.push(a // b)
+        elif opcode == "MALLOC":
+            size = int(parts[0])
+            ptr = len(arrays)
+            arrays[ptr] = [None] * size
+            stack.push(ptr)
+
+        elif opcode == "FREE":
+            ptr = stack.pop()
+            if ptr in arrays:
+                del arrays[ptr]
+            else:
+                print(f"memory free error: pointer {ptr} not found.")
+                sys.exit(1)
 
         elif opcode == "WHILE":
             condition = parts[0]
@@ -209,7 +232,7 @@ def execute(pgm, labels):
 
         elif opcode.endswith(":"):
             label = opcode[:-1]
-            functions[label_name] = t
+            functions[label] = t
 
         elif opcode == "CALL":
             func_name = parts[0]
@@ -234,7 +257,7 @@ def execute(pgm, labels):
         if opcode == "ARRCREATE":
             name = parts[1]
             size = int(parts[2])
-            arrays[name] = [None] * size  
+            arrays[name] = [None] * size
 
         elif opcode == "ARRSET":
             name = parts[1]
@@ -257,17 +280,25 @@ def execute(pgm, labels):
         elif opcode == "EQ":
             var1 = stack.pop()
             var2 = stack.pop()
-            stack.push(1 if var1 == var2 else 0)  
+            stack.push(1 if var1 == var2 else 0)
+
+        elif opcode == "EMPTY":
+            print(stack.full==-1)
+        elif opcode== "SIZE":
+            print(stack.full+1)
+        elif opcode=="CLEAR":
+            stack.full=-1
+        
 
         elif opcode == "LT":
             var1 = stack.pop()
             var2 = stack.pop()
-            stack.push(1 if var1 < var2 else 0) 
+            stack.push(1 if var1 < var2 else 0)
 
         elif opcode == "GT":
             var1 = stack.pop()
             var2 = stack.pop()
-            stack.push(1 if var1 > var2 else 0) 
+            stack.push(1 if var1 > var2 else 0)
 
 
         else:
@@ -275,6 +306,7 @@ def execute(pgm, labels):
             sys.exit(1)
 
         t += 1
+
 
 class Stack:
     def __init__(self, size):
@@ -299,8 +331,10 @@ class Stack:
             sys.exit(1)
         return self.array[self.full]
 
+
 def debug(stack):
     print("Depuracion:", stack.array[:stack.full + 1])
+
 
 if __name__ == "__main__":
     path = check()
@@ -327,4 +361,3 @@ if __name__ == "__main__":
             tokcounter += 1
     pgm.append("STOP")
     execute(pgm, labels)
-
