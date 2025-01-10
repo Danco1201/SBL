@@ -8,6 +8,12 @@ functions = {}
 arrays={}
 classes={}
 instances={}
+def concatenate(*args):
+    return ''.join(args)
+
+def substring(string, start, end):
+    return string[start:end]
+
 def include(name):
     if name in modules:
         return modules[name]
@@ -171,6 +177,51 @@ def execute(pgm, labels):
             if val != 0:
                 t = start
 
+        if opcode == "CONCAT":
+            if len(parts) >= 2:
+                result = concatenate(*parts)
+                stack.push(result)
+            else:
+                print(f"Concatenation error in line {t}.")
+                sys.exit(1)
+
+        elif opcode == "SUBSTR":
+            if len(parts) == 3:
+                string = stack.pop()
+                start = int(parts[1])
+                end = int(parts[2])
+                result = substring(string, start, end)
+                stack.push(result)
+            else:
+                print(f"Substring error in line {t}.")
+                sys.exit(1)
+
+        elif opcode == "FOR":
+            var_name, start, end = parts[:3]
+            loopstack.append((t - 1, var_name, int(start), int(end)))
+            variables[var_name] = int(start)
+
+        elif opcode == "ENDFOR":
+            start, var_name, loop_start, loop_end = loopstack.pop()
+            variables[var_name] += 1
+            if variables[var_name] <= loop_end:
+                t = start
+
+        elif opcode.endswith(":"):
+            label = opcode[:-1]
+            functions[label_name] = t
+
+        elif opcode == "CALL":
+            func_name = parts[0]
+            if func_name in functions:
+                execute(pgm[functions[func_name]:], labels)
+            else:
+                print(f"function {func_name} not found.")
+                sys.exit(1)
+
+        elif opcode == "DEBUG":
+            debug(stack, variables)
+
         elif opcode == "THREAD":
             thread_code = parts
             thread = threading.Thread(target=execute, args=(thread_code, labels))
@@ -276,3 +327,4 @@ if __name__ == "__main__":
             tokcounter += 1
     pgm.append("STOP")
     execute(pgm, labels)
+
