@@ -8,9 +8,30 @@ functions = {}
 arrays={}
 classes={}
 instances={}
+macros={}
 def concatenate(*args):
     return ''.join(args)
-
+def macro(lines):
+    macros = {}
+    result = []
+    
+    for line in lines:
+        if line.startswith("#define"):
+            parts = line.split(maxsplit=2)
+            macro_name = parts[1]
+            macro_body = parts[2]
+            macros[macro_name] = macro_body
+        else:
+            for macro_name, macro_body in macros.items():
+                if macro_name in line:
+                    args = line.split()[1:]
+                    expanded_body = macro_body
+                    for i, arg in enumerate(args):
+                        expanded_body = expanded_body.replace(f"arg{i+1}", arg)
+                    line = expanded_body
+            result.append(line)
+    
+    return result
 def substring(string, start, end):
     return string[start:end]
 
@@ -303,9 +324,11 @@ def debug(stack):
     print("Depuracion:", stack.array[:stack.full + 1])
 
 if __name__ == "__main__":
-    path = check()
     lines = read(path)
+    macrolines = macro(lines)
     labels = procesar(lines)
+execute(lines, labels)
+
     pgm = []
     tokcounter = 0
     for line in lines:
