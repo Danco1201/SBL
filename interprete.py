@@ -8,7 +8,17 @@ functions = {}
 arrays = {}
 classes = {}
 instances = {}
+mutexes={}
 
+class Mutex:
+    def __init__(self):
+        self.lock = threading.Lock()
+
+    def lock(self):
+        self.lock.acquire()
+
+    def unlock(self):
+        self.lock.release()
 
 def concatenate(*args):
     return ''.join(args)
@@ -68,6 +78,11 @@ def procesar(lines):
             labels[opcode[:-1]] = tokcounter
         tokcounter += 1
     return labels
+def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    else:
+        return n * factorial(n - 1)
 
 
 def execute(pgm, labels):
@@ -190,6 +205,26 @@ def execute(pgm, labels):
                 print(f"memory free error: pointer {ptr} not found.")
                 sys.exit(1)
 
+        elif opcode == "MUTEX":
+            mutex_name = parts[1]
+            mutexes[mutex_name] = Mutex()
+
+        elif opcode == "LOCK":
+            mutex_name = parts[1]
+            if mutex_name in mutexes:
+                mutexes[mutex_name].lock()
+            else:
+                print(f"mutex {mutex_name} not founded")
+                sys.exit(1)
+
+        elif opcode == "UNLOCK":
+            mutex_name = parts[1]
+            if mutex_name in mutexes:
+                mutexes[mutex_name].unlock()
+            else:
+                print(f"mutex {mutex_name} not founded.")
+                sys.exit(1)
+
         elif opcode == "WHILE":
             condition = parts[0]
             loopstack.append((t - 1, condition))
@@ -216,7 +251,7 @@ def execute(pgm, labels):
                 result = substring(string, start, end)
                 stack.push(result)
             else:
-                print(f"Substring error in line {t}.")
+                print(f"substring error in line {t}.")
                 sys.exit(1)
 
         elif opcode == "FOR":
@@ -243,7 +278,7 @@ def execute(pgm, labels):
                 sys.exit(1)
 
         elif opcode == "DEBUG":
-            debug(stack, variables)
+            print(f'Stack:{debug(stack)}')
 
         elif opcode == "THREAD":
             thread_code = parts
@@ -269,6 +304,29 @@ def execute(pgm, labels):
                 print(f"array  {name} index {index} setting error in line {t}")
                 sys.exit(1)
 
+        elif opcode=="ROUND":
+            n: float = stack.pop()
+            stack.push(round(n))
+        elif opcode=="CEIL":
+            from math import ceil
+            n: float = stack.pop()
+            stack.push(ceil(n))
+        elif opcode=="FACTORIAL":
+            n: int = stack.pop()
+            stack.push(factorial(n))
+
+        elif opcode=="RANDOM":
+            import random as r
+            print(r.random())
+        elif opcode=="NEG":
+            n: int = stack.pop()
+            stack.push(-n)
+
+        elif opcode=="REV":
+            txt: str = stack.pop()
+            print(txt[::-1])
+
+
         elif opcode == "ARRGET":
             name = parts[1]
             index = int(parts[2])
@@ -288,7 +346,7 @@ def execute(pgm, labels):
             print(stack.full+1)
         elif opcode=="CLEAR":
             stack.full=-1
-        
+
 
         elif opcode == "LT":
             var1 = stack.pop()
@@ -301,6 +359,7 @@ def execute(pgm, labels):
             stack.push(1 if var1 > var2 else 0)
 
 
+
         else:
             print(f"operation not available {opcode} at line {t}.")
             sys.exit(1)
@@ -310,7 +369,7 @@ def execute(pgm, labels):
 
 class Stack:
     def __init__(self, size):
-        self.array = [None] * size
+        self.array = [0] * size
         self.full = -1
 
     def push(self, n):
@@ -321,7 +380,7 @@ class Stack:
         if self.full == -1:
             print("index doesn't exist")
             sys.exit(1)
-        n = self.array[self.full]
+        n: int | str = self.array[self.full]
         self.full -= 1
         return n
 
@@ -330,6 +389,9 @@ class Stack:
             print("stack doesn't exist.")
             sys.exit(1)
         return self.array[self.full]
+
+    def append(self, param):
+        self.append(param)
 
 
 def debug(stack):
