@@ -225,6 +225,14 @@ def execute(pgm, labels):
                 print(f"mutex {mutex_name} not founded.")
                 sys.exit(1)
 
+        elif opcode == "DESTROY":
+            instance_name = parts[1]
+            if instance_name in instances:
+                del instances[instance_name]
+            else:
+                print(f"instance {instance_name} not found.")
+                sys.exit(1)
+
         elif opcode == "WHILE":
             condition = parts[0]
             loopstack.append((t - 1, condition))
