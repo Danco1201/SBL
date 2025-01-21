@@ -1,5 +1,5 @@
 # SBL - Stack Based Language
-
+# (PROYECTO CANCELADO)
 ## Descripción
 SBL (*Stack Based Language*) es un lenguaje de programación de bajo nivel basado en el uso de una pila, aunque tambien incluye concurrencia y modularidad. Diseñado para programadores que buscan un control detallado sobre los procesos, SBL permite explorar conceptos fundamentales de la computación y aprender cómo interactuar directamente con estructuras como pilas, variables y flujos de control, ademas de incluir caracteristicas de alto nivel, como concurrencia y clases, pero sin abstracciones.
 
